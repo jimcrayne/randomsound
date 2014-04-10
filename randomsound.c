@@ -17,7 +17,7 @@
 #include "debias.h"
 #include "micfill.h"
 
-static char *version_number = "0.2";
+static char *version_number = "0.3";
 static const char *pidfile = NULL;
 int daemonise = 0;
 int verbose = 0;

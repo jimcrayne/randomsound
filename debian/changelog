@@ -1,16 +1,13 @@
-randomsound (0.2-5.1) UNRELEASED; urgency=low
+randomsound (0.3-1) UNRELEASED; urgency=low
 
+  [ Stephen Gran ]
   * Non-maintainer upload.
+
+  [ James Crayne ]
+  * Upstrem version bumped to 0.3
   * Call libasound directly only when needed.
 
- --  <jim@samwise>  Thu, 10 Apr 2014 03:00:50 -0400
-
-randomsound (0.2-5) unstable; urgency=low
-
-  * Some init script header fixups (closes: #542271)
-  * Control information fixup
-
- -- Stephen Gran <sgran@debian.org>  Sun, 13 Sep 2009 20:17:49 +0100
+ -- <jim@samwise>  Thu, 10 Apr 2014 03:00:50 -0400
 
 randomsound (0.2-4) unstable; urgency=low
 
