@@ -7,7 +7,7 @@ randomsound (0.3-1) UNRELEASED; urgency=low
   * Upstrem version bumped to 0.3
   * Call libasound directly only when needed.
 
- -- <jim@samwise>  Thu, 10 Apr 2014 03:00:50 -0400
+ -- James Crayne <jim.crayne@gmail.com>  Thu, 10 Apr 2014 03:00:50 -0400
 
 randomsound (0.2-4) unstable; urgency=low
 
