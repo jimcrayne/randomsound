@@ -39,6 +39,7 @@ bitbuffer_new(const int size)
   return ret;
 }
 
+#ifndef TEST
 int
 bitbuffer_fill(BitBuffer buf)
 {
@@ -55,6 +56,7 @@ bitbuffer_fill(BitBuffer buf)
 	}
 	return e;
 }
+#endif
 
 
 void
