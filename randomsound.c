@@ -12,6 +12,10 @@
 #include <linux/random.h>
 #include <sys/ioctl.h>
 #include <poll.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "bitbuffer.h"
 #include "debias.h"
@@ -19,6 +23,9 @@
 
 static char *version_number = "0.3";
 static const char *pidfile = NULL;
+static const char *testdumpfilename = NULL;
+
+int testdumpsize = 0;
 int daemonise = 0;
 int verbose = 0;
 int minwatermark = 256;
@@ -45,7 +52,10 @@ int
 bits_in_pool(void)
 {
   int ret;
-  ioctl(randomfd, RNDGETENTCNT, &ret);
+  if (NULL != testdumpfilename)
+    ret = testdumpsize;
+  else
+    ioctl(randomfd, RNDGETENTCNT, &ret);
   return ret;
 }
 
@@ -61,13 +71,44 @@ do_mixin_bits(void)
   for (i = 0; i < depositsize; ++i) {
     bitbuffer_extract_bits(buffered_bits, random_injector.value.bitfield + i, 8);
   }
-  if (ioctl(randomfd, RNDADDENTROPY, &random_injector) == -1) {
+  if (NULL != testdumpfilename) {
+    int fd = open(testdumpfilename,O_CREAT | O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    if (fd > 0 ) {
+      struct pollfd fds[1] = { 0 } ;
+      fds[0].fd = fd;
+      fds[0].events = POLLOUT;
+      int write_ret = -2;
+      if (poll(fds,1, 1000))
+        write_ret = write(fds[0].fd, (void *)(random_injector.value.bitfield), random_injector.size );
+      if (write_ret < 0){
+        fprintf(stderr, "ERROR: (errno=%d) %s\n", errno, strerror(errno));
+      }
+      int fsync_ret = fsync(fd);
+      int close_ret = close(fd);
+      if ((write_ret <0) || (close_ret <0) || (fsync_ret <0)) {
+        fprintf(stderr, "ERROR: (write_ret=%d)(fsync_ret=%d)(close_ret = %d)(errno=%d) %s\n", 
+            write_ret, fsync_ret, close_ret,
+            errno, strerror(errno));
+        fprintf(stderr, "ERROR: Could not write to test dump file (%s)..\n", testdumpfilename);
+      } else {
+        testdumpsize += write_ret * 8;
+        if (verbose > 0)
+          fprintf(stdout, "Wrote %d bytes to %s.\n", write_ret, testdumpfilename);
+      }
+    }
+
+  } else if (ioctl(randomfd, RNDADDENTROPY, &random_injector) == -1) {
     perror("ioctl");
   }
   if (verbose > 3)
     printf("Kernel now at %d bits of entropy\n", bits_in_pool());
-  if (bits_before == bits_in_pool())
+  if (bits_before == bits_in_pool()) {
     printf("Did it fail?!?!\n");
+    if (NULL != testdumpfilename){
+      time_to_quit = 1;
+      testdumpsize = maxwatermark + 9;
+    }
+  }
 }
 
 void
@@ -83,7 +124,7 @@ main_loop()
   while (!time_to_quit) {
     if (verbose > 3)
       printf("Sleeping... (entropy pool at %d bits)\n", bits_in_pool());
-    ret = poll(fds, 1, -1);
+    ret = (NULL==testdumpfilename) ? poll(fds, 1, -1) : 1;
     if (ret == -1) {
       printf("woke poll interrupted!\n");
       if (!time_to_quit)
@@ -115,6 +156,8 @@ main_loop()
       }
 
     }
+    if (NULL != testdumpfilename)
+      time_to_quit = 1;
   }
 }
 
@@ -132,6 +175,7 @@ usage(const char* prog, FILE *output)
           "          M - specify max number of bits in the pool.\n"\
           "          b - specify number of bytes of randomness to buffer for use.\n"\
           "          d - specify number of bytes to deposit into the pool each time.\n",
+          "          T - deposit into specified file for external testing.\n",
           prog);
 }
 
@@ -160,13 +204,15 @@ caught_signal(int sig)
 }
 
 void SetWriteWakeupThreshold() {
-  FILE *procWakeThresh = fopen("/proc/sys/kernel/random/write_wakeup_threshold", "w" );
-  if (procWakeThresh != NULL) {
-    fprintf(procWakeThresh, "%d", minwatermark);
-    fclose(procWakeThresh);
-  } else {
-    fprintf(stderr,"%s", "Unable to write to kernel interface. Be sure to run as root or super user.\n");
-    exit(2);
+  if (NULL == testdumpfilename) {
+    FILE *procWakeThresh = fopen("/proc/sys/kernel/random/write_wakeup_threshold", "w" );
+    if (procWakeThresh != NULL) {
+      fprintf(procWakeThresh, "%d", minwatermark);
+      fclose(procWakeThresh);
+    } else {
+      fprintf(stderr,"%s", "Unable to write to kernel interface. Be sure to run as root or super user.\n");
+      exit(2);
+    }
   }
 }
 
@@ -177,7 +223,7 @@ main(int argc, char **argv)
   FILE *file;
   struct sigaction sigact;
 
-  while ((opt = getopt(argc, argv, ":hDp:vVm:M:b:d:")) != -1) {
+  while ((opt = getopt(argc, argv, ":hDp:vVm:M:b:d:T:")) != -1) {
     switch (opt) {
     case 'h':
       usage(argv[0], stdout);
@@ -205,6 +251,9 @@ main(int argc, char **argv)
       break;
     case 'd':
       depositsize = atoi(optarg);
+      break;
+    case 'T':
+      testdumpfilename = optarg;
       break;
     default:
       usage(argv[0], stderr);
@@ -259,6 +308,12 @@ main(int argc, char **argv)
   if (incoming_bits == NULL || buffered_bits == NULL) {
     fprintf(stderr, "Unable to allocate buffers.\n");
     return 3;
+  }
+
+  if (testdumpfilename) {
+    printf("Running in test dump mode (no daemon).\n Dumping entropy bits to file: %s\n", testdumpfilename);
+    remove(testdumpfilename);
+    main_loop();
   }
   
   randomfd = open("/dev/random", O_RDWR);

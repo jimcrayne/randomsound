@@ -5,6 +5,7 @@ HDRS := bitbuffer.h debias.h micfill.h
 
 LINK := gcc
 CC := gcc
+CFLAGS :=-g 
 
 OBJS := $(SRCS:.c=.o)
 
