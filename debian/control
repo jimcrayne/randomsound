@@ -1,0 +1,15 @@
+Source: randomsound
+Section: admin
+Priority: extra
+Maintainer: Stephen Gran <sgran@debian.org>
+Build-Depends: debhelper (>= 5)
+Homepage: http://www.digital-scurf.org/software/randomsound
+Standards-Version: 3.8.3
+
+Package: randomsound
+Architecture: any
+Depends: ${shlibs:Depends}, libasound2
+Description: ALSA sound card related entropy gathering daemon
+ Using the low order bit of the ADC output of your sound card,
+ randomsound gathers entropy, debiases it and offers it up to your
+ kernel's random pool. 
