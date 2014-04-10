@@ -1,7 +1,7 @@
 all: randomsound
 
-SRCS := randomsound.c bitbuffer.c debias.c asoundrunner.c
-HDRS := bitbuffer.h debias.h asoundrunner.h
+SRCS := randomsound.c bitbuffer.c debias.c micfill.c
+HDRS := bitbuffer.h debias.h micfill.h
 
 LINK := gcc
 CC := gcc
@@ -11,7 +11,7 @@ OBJS := $(SRCS:.c=.o)
 check: test_bitbuffer
 
 randomsound: $(OBJS)
-	$(LINK) -o $@ $^
+	$(LINK) -o $@ $^ -lasound
 
 clean:
 	$(RM) randomsound $(OBJS)
@@ -21,7 +21,7 @@ test_%: %.c
 	$(CC) -DTEST -o $@ $<
 	./$@
 
-randomsound.o: bitbuffer.h debias.h asoundrunner.h
-bitbuffer.o: bitbuffer.h
+randomsound.o: bitbuffer.h debias.h micfill.h
+bitbuffer.o: bitbuffer.h micfill.h
 debias.o: debias.h bitbuffer.h
-asoundrunner.o: asoundrunner.h bitbuffer.h
+micfill.o: micfill.h

@@ -11,10 +11,11 @@
 #include <linux/types.h>
 #include <linux/random.h>
 #include <sys/ioctl.h>
+#include <poll.h>
 
 #include "bitbuffer.h"
 #include "debias.h"
-#include "asoundrunner.h"
+#include "micfill.h"
 
 static char *version_number = "0.2";
 static const char *pidfile = NULL;
@@ -24,12 +25,12 @@ int minwatermark = 256;
 int maxwatermark = 4096-256;
 int depositsize = 64;
 int buffersize = 64 * 16;
-int time_to_quit = 0;
+volatile int time_to_quit = 0;
 
 BitBuffer incoming_bits;
 BitBuffer buffered_bits;
 
-int randomfd;
+volatile int randomfd;
 
 struct injector {
   int ent_count;
@@ -72,64 +73,47 @@ do_mixin_bits(void)
 void
 main_loop()
 {
-  fd_set readfds;
-  fd_set writefds;
-  fd_set errfds;
   int ret;
   int adding = 0;
-  
-  FD_ZERO(&writefds);
+  struct pollfd fds[1];
+  fds[0].fd = randomfd;
+  fds[0].events = POLLOUT;
+  fds[0].revents = 0;
   
   while (!time_to_quit) {
-    if (restart_arecord == 1) {
-      int pid;
-      if (verbose > 1)
-        printf("Need to restart arecord.\n");
-      pid = start_arecord(incoming_bits);
-      if (pid == -1)
-        return;
-      if (verbose > 1)
-        printf("Started arecord with pid %d\n", pid);
-      FD_ZERO(&readfds);
-      FD_ZERO(&errfds);
-      if (restart_arecord) {
-        printf("Arecord already died.\n");
-        return;
-      }
-    }
-    FD_SET(arecord_read_fd, &readfds);
-    FD_SET(arecord_read_fd, &errfds);
-    ret = select(arecord_read_fd + 1, &readfds, &writefds, &errfds, NULL);
+    if (verbose > 3)
+      printf("Sleeping... (entropy pool at %d bits)\n", bits_in_pool());
+    ret = poll(fds, 1, -1);
     if (ret == -1) {
+      printf("woke poll interrupted!\n");
       if (!time_to_quit)
-        perror("select");
+        perror("poll");
       return;
     }
-    if (FD_ISSET(arecord_read_fd, &readfds))
-      asound_do_read();
-    if (FD_ISSET(arecord_read_fd, &errfds)) {
-      printf("Error on arecord fd, gotta restart.\n");
-      restart_arecord = 1;
+    else {
+      if (verbose > 3)
+        printf("woke!\n");
     }
-    ret = transfer_bits_and_debias(incoming_bits, buffered_bits);
-    if (verbose > 3 && ret > 0)
-      printf("Added %d bits to cache. Now at %d/%d bits in it\n", ret, bitbuffer_available_bits(buffered_bits), buffersize * 8);
-    if (bits_in_pool() <= minwatermark && adding == 0) {
-      if (verbose > 2)
-        printf("Transition to inserting entropy. Kernel pool at %d\n", bits_in_pool());
-      adding = 1;
-    }
-    if (bits_in_pool() >= maxwatermark && adding == 1) {
-      if (verbose > 2)
-        printf("Transition to waiting. Kernel pool at %d\n", bits_in_pool());
-      adding = 0;
-    }
-    if (adding == 1) {
-      if (bitbuffer_available_bits(buffered_bits) >= (depositsize * 8)) {
+
+
+
+    while (bits_in_pool() < maxwatermark) {
+
+      int e = bitbuffer_fill(incoming_bits);
+      if (e<0) {
+        printf("Error: %s\n", mic_strerror(e));
+        return;
+      }
+      ret = transfer_bits_and_debias(incoming_bits, buffered_bits);
+      if (verbose > 3 && ret > 0)
+        printf("Added %d bits to cache. Now at %d/%d bits in it\n", ret, bitbuffer_available_bits(buffered_bits), buffersize * 8);
+
+      while((bits_in_pool() < maxwatermark) && (bitbuffer_available_bits(buffered_bits) >= (depositsize * 8))) {
         do_mixin_bits();
         if (verbose > 3)
           printf("Kernel entropy pool now sits at %d bits\n", bits_in_pool());
       }
+
     }
   }
 }
@@ -172,6 +156,18 @@ static void
 caught_signal(int sig)
 {
   time_to_quit++;
+  close(randomfd);
+}
+
+void SetWriteWakeupThreshold() {
+  FILE *procWakeThresh = fopen("/proc/sys/kernel/random/write_wakeup_threshold", "w" );
+  if (procWakeThresh != NULL) {
+    fprintf(procWakeThresh, "%d", minwatermark);
+    fclose(procWakeThresh);
+  } else {
+    fprintf(stderr,"%s", "Unable to write to kernel interface. Be sure to run as root or super user.\n");
+    exit(2);
+  }
 }
 
 int
@@ -221,6 +217,10 @@ main(int argc, char **argv)
     fprintf(stderr, "Minimum watermark is below 64 bits. This is silly.\n");
     return 2;
   }
+  if (minwatermark > 4096) {
+    fprintf(stderr, "Ninimum watermark is above 4096. This is not possible.\n");
+    return 2;
+  }
   if (maxwatermark > 4096) {
     fprintf(stderr, "Maxmimum watermark is above 4096. This is not possible.\n");
     return 2;
@@ -233,6 +233,10 @@ main(int argc, char **argv)
     fprintf(stderr, "Deposit size must be a multiple of four, between 4 and 512 inclusive.\n");
     return 2;
   }
+
+  // minwatermark is valid, go ahead and write to 
+  // /proc/sys/kernel/random/write_wakeup_threshold
+  SetWriteWakeupThreshold();
   
   if (daemonise && !pidfile)
     pidfile = "/var/run/randomsound.pid";

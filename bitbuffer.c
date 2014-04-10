@@ -3,9 +3,13 @@
  * Implementation of a circular buffer of bits.
  *
  * @author Daniel Silverstone
+ * 
+ * (with an additional method for filling the 
+ *  buffer with microphone data.)
  */
 #include <stdlib.h>
 
+#include "micfill.h"
 #include "bitbuffer.h"
 
 #ifndef MIN
@@ -34,6 +38,24 @@ bitbuffer_new(const int size)
   ret->bitsused = 0;
   return ret;
 }
+
+int
+bitbuffer_fill(BitBuffer buf)
+{
+	int e = 0;
+	if ( 0 < (e=micfill(buf->bits, buf->size /8)) ) {
+		buf->firstused = 0;
+		buf->bitsused = buf->size;
+		buf->nextfree = 0;
+	}
+	else {
+		buf->firstused = 0;
+		buf->bitsused = 0;
+		buf->nextfree = 0;
+	}
+	return e;
+}
+
 
 void
 bitbuffer_free(BitBuffer buf)

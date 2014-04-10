@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
 
-static void init() __attribute__((constructor));
-static void cleanup() __attribute__((destructor));
+// // This would leave the alsa handle open.
+static void init(); // __attribute__((constructor));
+static void cleanup(); // __attribute__((destructor));
+// // We dont do it anymore because it wastes cpu.
 
 // globals initialized by init()
 static snd_pcm_t *capture_handle = NULL;
@@ -14,10 +16,12 @@ static int err = 0;
 
 int micfill(unsigned char *buf, size_t cnt)
 {
-	if(!capture_handle) return -1;
+	init();
+	if(!capture_handle) return err;
 	if ((err = snd_pcm_readi (capture_handle, buf, cnt/bytes_per_frame)) != cnt/bytes_per_frame) {
 		err = -1;
 	}
+	cleanup();
 	return err;
 }
 

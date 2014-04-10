@@ -1,6 +1,8 @@
 /** @file bitbuffer.h
  *
  * A circular buffer of bits.
+ * (with an additional method for filling the 
+ *  buffer with microphone data.)
  *
  * @author Daniel Silverstone
  */
@@ -25,6 +27,14 @@ typedef unsigned char BitField;
  * @return The new ::BitBuffer
  */
 BitBuffer bitbuffer_new(const int size);
+
+/** Fill a bit buffer with sound bits.
+ *
+ * Fill a bitbuffer with bits using the microphone
+ *
+ * @param buf The ::BitBuffer to fill.
+ */
+int bitbuffer_fill(BitBuffer buf);
 
 /** Free a bit buffer.
  *
