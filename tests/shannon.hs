@@ -1,20 +1,28 @@
 import Data.List
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Lazy as BS
 import Data.Word
 import Data.Bits
 import Data.Char (ord)
 
 readBinaryFile :: String -> IO [Word8]
-readBinaryFile file = do
-    contents <- BS.readFile file
-    return $ map (fromIntegral . ord) $ BS.unpack contents
+readBinaryFile file = fmap BS.unpack $ BS.readFile file
+
+readBinaryStdin:: IO [Word8]
+readBinaryStdin = fmap BS.unpack $ BS.getContents
+
+regroup :: [Word8] -> [Word16]
+regroup (x:y:ys) = bytes x y : regroup ys
+ where
+    bytes low hi = fromIntegral low + 256 * fromIntegral hi
+regroup xs = map fromIntegral xs
  
 main = do
-    x <- readBinaryFile "data.bin"
-    putStr "Shannon entropy of data.bin is "
+    -- x <- readBinaryFile "data.bin"
+    x <- fmap regroup readBinaryStdin
+    putStr "Shannon entropy of stdin is "
     print $ entropy x
-    putStrLn "(Press enter to continue.)"
-    y <- getChar
+    -- putStrLn "(Press enter to continue.)"
+    -- y <- getChar
     putStrLn "Thankyou."
  
 entropy s = 
