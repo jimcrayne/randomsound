@@ -164,17 +164,17 @@ main_loop()
 void
 usage(const char* prog, FILE *output)
 {
-  fprintf(output, "%s: Usage:\n"\
-          "\n"\
-          "Argument: h - display this help message\n"\
-          "          V - display version information.\n"\
-          "          D - Daemonize\n"\
-          "          p - pidfile\n"\
-          "          v - Increase verbosity. Can be used more than once.\n"\
-          "          m - specify minimum number of bits of entropy in the pool.\n"\
-          "          M - specify max number of bits in the pool.\n"\
-          "          b - specify number of bytes of randomness to buffer for use.\n"\
-          "          d - specify number of bytes to deposit into the pool each time.\n",
+  fprintf(output, "%s: Usage:\n"
+          "\n"
+          "Argument: h - display this help message\n"
+          "          V - display version information.\n"
+          "          D - Daemonize\n"
+          "          p - pidfile\n"
+          "          v - Increase verbosity. Can be used more than once.\n"
+          "          m - specify minimum number of bits of entropy in the pool.\n"
+          "          M - specify max number of bits in the pool.\n"
+          "          b - specify number of bytes of randomness to buffer for use.\n"
+          "          d - specify number of bytes to deposit into the pool each time.\n"
           "          T - deposit into specified file for external testing.\n",
           prog);
 }
