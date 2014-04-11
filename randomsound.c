@@ -312,6 +312,8 @@ main(int argc, char **argv)
 
   if (testdumpfilename) {
     printf("Running in test dump mode (no daemon).\n Dumping entropy bits to file: %s\n", testdumpfilename);
+    maxwatermark = 20480*8;
+    printf("Increasing maxwatermark(M) to %d (2480*8).\n", maxwatermark);
     remove(testdumpfilename);
     main_loop();
   }
