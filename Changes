@@ -1,0 +1,13 @@
+0.3
+	Removed alsa-utils dependency, calls libasound directly
+	Reads from ADC only when needed.
+
+0.2
+	Incorporated manual page provided by Debian, updated it slightly.
+	Added changes document.
+
+0.1
+	Numbered release, added -V option
+
+Unnumbered release
+	Initial release, fully functional

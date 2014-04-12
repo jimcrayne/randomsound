@@ -1,0 +1,50 @@
+.TH RANDOMSOUND 8 "August 18, 2007" "Pepperfish"
+.SH NAME
+randomsound \- ALSA sound card related entropy gathering daemon.
+.SH SYNOPSIS
+.B randomsound [options]
+.SH DESCRIPTION
+.PP
+Using the low order bit of the ADC output of your sound card, 
+\fBrandomsound\fP
+gathers entropy, debiases it and offers it up to your kernel's random
+pool. It can be tweaked to only write into the pool when it drops
+below a certain level, and to back off once the pool is full
+enough. This build will set your sound card into 16 bit mono unsigned
+input at 8KHz.  If your sound card cannot do that then you will need
+to change the defines in asoundrunner.c and recompile the package. You
+must have set up asound as root on your machine. This can be done with
+the asoundconf tool and its set-default-card command.
+.PP
+You may also need to use the alsamixer to ensure that the sound card
+is generating plenty of noise. Set all the gains nice and high, turn on
+any boosters you have. If you have a V_REFLVL or similar then consider
+tweaking that.
+
+.SH OPTIONS
+.TP
+.B -D 
+Daemonize
+.TP
+.B -v 
+Increase verbosity. Can be used more than once.
+.TP
+.B -m 
+specify minimum number of bits of entropy in the pool.
+.TP
+.B -M 
+specify max number of bits in the pool.
+.TP
+.B -b 
+specify number of bytes of randomness to buffer for use.
+.TP
+.B -d 
+specify number of bytes to deposit into the pool each time.
+.TP
+.B -h 
+display help message
+.TP
+.B -V 
+display version information.
+.SH AUTHOR
+randomsound was written by Daniel Silverstone <dsilvers@digital-scurf.org>
