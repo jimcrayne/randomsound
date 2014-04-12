@@ -4,8 +4,9 @@ randomsound (0.3-1) UNRELEASED; urgency=low
   * Non-maintainer upload.
 
   [ James Crayne ]
-  * Upstrem version bumped to 0.3
+  * Upstrem version bumped to 0.4
   * Call libasound directly only when needed.
+  * 
 
  -- James Crayne <jim.crayne@gmail.com>  Thu, 10 Apr 2014 03:00:50 -0400
 

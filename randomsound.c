@@ -21,7 +21,7 @@
 #include "debias.h"
 #include "micfill.h"
 
-static char *version_number = "0.3";
+static char *version_number = "0.4";
 static const char *pidfile = NULL;
 static const char *testdumpfilename = NULL;
 
