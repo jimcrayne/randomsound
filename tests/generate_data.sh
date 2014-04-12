@@ -1,5 +1,7 @@
 #!/bin/sh
 
 if make -C .. ; then
-../randomsound -v -v -v -v -T data-`date +'%F-%H-%M'`.bin
+DATFILE=data-`date +'%F-%H-%M'`.bin
+../randomsound -v -v -v -v -T $DATFILE
+shannon $DATFILE
 fi

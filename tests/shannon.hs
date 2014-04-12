@@ -2,6 +2,7 @@ import Data.List
 import qualified Data.ByteString.Lazy as BS
 import Data.Word
 import System.Environment (getArgs)
+import System.Exit 
 
 readBinaryFile :: String -> IO [Word8]
 readBinaryFile file = fmap BS.unpack $ BS.readFile file
@@ -18,11 +19,19 @@ regroup xs = map fromIntegral xs
 main :: IO ()
 main = do
     args <- getArgs
-    mapM_ (\arg -> do
+    entropies <- mapM (\arg -> do
         x <- readBinaryFile arg
         putStr $ "Shannon entropy of " ++ arg ++ " is "
-        print $ entropy x) args
-    putStrLn "Thankyou."
+        let entropOfArg = entropy x
+        print $ entropOfArg
+        return entropOfArg) args
+    if all (>7.5) $ entropies
+        then do
+            putStrLn "Thankyou."
+            exitSuccess
+        else do
+            putStrLn $ "Poor entropy :( entropies="++show entropies
+            exitFailure
  
 entropy s = 
  sum . map lg' . fq' . map (fromIntegral.length) . group . sort $ s
