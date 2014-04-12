@@ -1,3 +1,6 @@
+0.4
+	New option -T allows users to dump random bits to file.
+
 0.3
 	Removed alsa-utils dependency, calls libasound directly
 	Reads from ADC only when needed.
