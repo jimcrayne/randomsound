@@ -19,6 +19,7 @@ regroup xs = map fromIntegral xs
 main :: IO ()
 main = do
     args <- getArgs
+    putStrLn "Expected Shannon Entropy, assuming random 8 bit symbols, is 8."
     entropies <- mapM (\arg -> do
         x <- readBinaryFile arg
         putStr $ "Shannon entropy of " ++ arg ++ " is "
