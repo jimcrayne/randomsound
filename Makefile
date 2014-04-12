@@ -26,6 +26,7 @@ clean:
 	$(RM) randomsound $(OBJS)
 	$(RM) *~ test_bitbuffer
 	$(RM) tests/*.o tests/*.hi tests/shannon
+	@echo "WARNING: Leaving data files for reference, to remove them: rm tests/*.bin"
 
 .PHONY: clean entropy_test all
 
