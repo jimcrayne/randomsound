@@ -365,5 +365,5 @@ main(int argc, char **argv)
   
   main_loop();
   
-  return -1;
+  return 0;
 }

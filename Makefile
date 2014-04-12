@@ -8,16 +8,16 @@ CC := gcc
 CFLAGS :=-g 
 
 OBJS := $(SRCS:.c=.o)
-DATAFILE := $(shell date +'data-%F-%H-%M.bin')
+DATAFILE := $(shell date +'tests/data-%F-%H-%M.bin')
 
 check: test_bitbuffer
 
 randomsound: $(OBJS)
 	$(LINK) -o $@ $^ -lasound
-	$(MAKE) entropy_test
+	$(MAKE) --no-print-directory entropy_test
 
 $(DATAFILE): randomsound
-	-./randomsound -v -v -v -T $@
+	./randomsound -v -v -v -T $@
 
 entropy_test: $(DATAFILE) tests/shannon
 	./tests/shannon $(DATAFILE)
