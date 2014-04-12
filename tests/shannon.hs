@@ -18,15 +18,17 @@ regroup xs = map fromIntegral xs
 
 diffs xs = zipWith (-) xs (drop 1 xs)
 
+goodbad xs = if all (>7.5) xs then "...........Success\n" 
+                              else "...........FAILURE!\n"
+
 main :: IO ()
 main = do
     args <- getArgs
     putStrLn "Expected Shannon Entropy, assuming random 8 bit symbols, is 8."
     entropies <- fmap concat $ mapM (\arg -> do
         x <- readBinaryFile arg
-        putStr $ "Shannon entropy of " ++ arg ++ " is "
         let entropOfArg = [ entropy x, entropy (diffs x) ]
-        print $ entropOfArg
+        putStr $ "Shannon entropy of " ++ arg ++ " is " ++ show entropOfArg ++ (goodbad entropOfArg)
         return entropOfArg) args
     if all (>7.5) $ entropies
         then do
