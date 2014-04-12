@@ -17,7 +17,7 @@ randomsound: $(OBJS)
 	$(MAKE) --no-print-directory entropy_test
 
 $(DATAFILE): randomsound
-	./randomsound -v -v -v -T $@
+	./randomsound -v -v -v -d 512 -T $@
 
 entropy_test: $(DATAFILE) tests/shannon
 	./tests/shannon $(DATAFILE)
