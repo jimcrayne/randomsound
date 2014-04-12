@@ -15,15 +15,17 @@ regroup (x:y:ys) = bytes x y : regroup ys
  where
     bytes low hi = fromIntegral low + 256 * fromIntegral hi
 regroup xs = map fromIntegral xs
- 
+
+diffs xs = zipWith (-) xs (drop 1 xs)
+
 main :: IO ()
 main = do
     args <- getArgs
     putStrLn "Expected Shannon Entropy, assuming random 8 bit symbols, is 8."
-    entropies <- mapM (\arg -> do
+    entropies <- fmap concat $ mapM (\arg -> do
         x <- readBinaryFile arg
         putStr $ "Shannon entropy of " ++ arg ++ " is "
-        let entropOfArg = entropy x
+        let entropOfArg = [ entropy x, entropy (diffs x) ]
         print $ entropOfArg
         return entropOfArg) args
     if all (>7.5) $ entropies
