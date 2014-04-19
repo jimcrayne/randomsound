@@ -1,4 +1,5 @@
-all: randomsound tests/shannon
+all: randomsound 
+	# tests/shannon
 
 SRCS := randomsound.c bitbuffer.c debias.c micfill.c
 HDRS := bitbuffer.h debias.h micfill.h
@@ -14,7 +15,7 @@ check: test_bitbuffer
 
 randomsound: $(OBJS)
 	$(LINK) -o $@ $^ -lasound
-	$(MAKE) --no-print-directory entropy_test
+	#$(MAKE) --no-print-directory entropy_test
 
 $(DATAFILE): randomsound
 	./randomsound -v -v -v -d 512 -M 512 -T $@
@@ -26,7 +27,7 @@ clean:
 	$(RM) randomsound $(OBJS)
 	$(RM) *~ test_bitbuffer
 	$(RM) tests/*.o tests/*.hi tests/shannon
-	@echo "WARNING: Leaving data files for reference, to remove them: rm tests/*.bin"
+	# @echo "WARNING: Leaving data files for reference, to remove them: rm tests/*.bin"
 
 .PHONY: clean entropy_test all
 

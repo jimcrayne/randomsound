@@ -2,7 +2,7 @@ Source: randomsound
 Section: admin
 Priority: extra
 Maintainer: Stephen Gran <sgran@debian.org>
-Build-Depends: debhelper (>= 5), ghc
+Build-Depends: debhelper (>= 5)
 Homepage: http://www.digital-scurf.org/software/randomsound
 Standards-Version: 3.8.3
 
