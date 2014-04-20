@@ -1,9 +1,11 @@
-randomsound (0.3-1) UNRELEASED; urgency=low
+randomsound (0.4-1) UNRELEASED; urgency=low
 
   [ James Crayne ]
   * Upstrem version bumped to 0.4
   * Call libasound directly only when needed.
   * Add -T option to dump random bits to data file.
+  * Changes
+  * Changes
 
  -- James Crayne <jim.crayne@gmail.com>  Thu, 10 Apr 2014 03:00:50 -0400
 
